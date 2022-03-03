@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class QuestionTimer : MonoBehaviour
 {
-    [SerializeField] float timeToCompleteQuestion = 10f;
-    [SerializeField] float timeToShowCorrectAnswer = 5f;
+    [SerializeField] float timeToCompleteQuestion = 5f;
+    [SerializeField] float timeToShowCorrectAnswer = 3f;
 
     public bool loadNextQuestion;
     public float fillFraction;
@@ -21,7 +21,7 @@ public class QuestionTimer : MonoBehaviour
 
     public void CancelTimer()
     {
-        currentTimerValue = 0;
+        currentTimerValue = 0.01f;
     }
 
     void UpdateTimer()
@@ -53,5 +53,10 @@ public class QuestionTimer : MonoBehaviour
                 loadNextQuestion = true;
             }
         }
+    }
+
+    public float getTimerValue()
+    {
+        return currentTimerValue;
     }
 }

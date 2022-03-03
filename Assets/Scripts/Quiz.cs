@@ -16,20 +16,35 @@ public class Quiz : MonoBehaviour
     [Header("Answers")]
     [SerializeField] GameObject[] answerButtons;
     int correctAnswerIndex;
-    bool hasAnsweredEarly;
+    bool hasAnsweredEarly = true;
 
     [Header("Buttons")]
     [SerializeField] Sprite defaultAnswerSprite;
     [SerializeField] Sprite correctAnswerSprite;
+    [SerializeField] Color defaultColor = new Color(255, 255, 255, 255);
+    [SerializeField] Color wrongAnswerColor = new Color(255, 75, 75, 255);
     
     [Header("Timer")]
     [SerializeField] Image timerImage;
     QuestionTimer timer;
 
+    [Header("Scorer")]
+    [SerializeField] TextMeshProUGUI scoreText;
+    ScoreKeeper scoreKeeper;
+
+    [Header("Progress bar")]
+    [SerializeField] Slider progressBar;
+
+    public bool quizCompleted;
+
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
+        progressBar.maxValue = questionList.Count;
+        progressBar.value = 0;
+        scoreKeeper = FindObjectOfType<ScoreKeeper>();
         timer = FindObjectOfType<QuestionTimer>();
+        scoreText.text = scoreKeeper.setStartingScore();
     }
 
     void Update()
@@ -38,6 +53,13 @@ public class Quiz : MonoBehaviour
 
         if (timer.loadNextQuestion)
         {
+            
+            if (progressBar.value == progressBar.maxValue)
+            {
+                quizCompleted = true;
+                return;
+            }
+        
             hasAnsweredEarly = false;
             GetNextQuestion();
             timer.loadNextQuestion = false;
@@ -54,9 +76,11 @@ public class Quiz : MonoBehaviour
         if (questionList.Count > 0)
         {
             setButtonState(true);
-            setDefaultButtonSprites();
+            setDefaultButtonLook();
             GetRandomQuestion();
             DisplayQuestion();
+            progressBar.value++;
+            scoreKeeper.IncrementQuestionsSeen();
         }
     }
 
@@ -71,12 +95,13 @@ public class Quiz : MonoBehaviour
         }
     }
 
-    private void setDefaultButtonSprites()
+    private void setDefaultButtonLook()
     {
         for (int i = 0; i < answerButtons.Length; i++)
         {
             Image buttonImage = answerButtons[i].GetComponent<Image>();
             buttonImage.sprite = defaultAnswerSprite;
+            buttonImage.color = defaultColor;
         }
     }
 
@@ -97,6 +122,7 @@ public class Quiz : MonoBehaviour
         DisplayAnswer(index);
         setButtonState(false);
         timer.CancelTimer();
+        scoreText.text = "Score: " + scoreKeeper.CalculateScore() + "%";
     }
 
     void DisplayAnswer(int index)
@@ -108,6 +134,7 @@ public class Quiz : MonoBehaviour
             questionText.text = "Correct!";
             buttonImage = answerButtons[index].GetComponent<Image>();
             buttonImage.sprite = correctAnswerSprite;
+            scoreKeeper.IncrementCorrectAnswers();
         }
         else
         {
@@ -115,6 +142,12 @@ public class Quiz : MonoBehaviour
             questionText.text = "Wrong! The correct answer was: \n" + currentQuestion.GetAnswer(correctAnswerIndex);
             buttonImage = answerButtons[correctAnswerIndex].GetComponent<Image>();
             buttonImage.sprite = correctAnswerSprite;
+
+            if (index >= 0)
+            {
+                Image wrongAnswerImage = answerButtons[index].GetComponent<Image>();
+                wrongAnswerImage.color = wrongAnswerColor;                
+            }
         }
     }
 
